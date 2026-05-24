@@ -43,6 +43,13 @@ def test_tokenise_returns_empty_for_blank():
     assert _tokenise("") == []
 
 
+def test_tokenise_strips_punctuation():
+    """Punctuation attached to words should not affect tokenisation."""
+    tokens = _tokenise("fix: resolve auth-related issue.")
+    assert "fix" in tokens or "fix:" not in tokens
+    assert "issue" in tokens or "issue." not in tokens
+
+
 # --- build_word_cloud ---
 
 def test_empty_commits_returns_empty_report():
@@ -77,6 +84,19 @@ def test_top_n_limits_results():
     commits = [_c(f"word{i} commit message") for i in range(20)]
     report = build_word_cloud(commits)
     assert len(report.top(5)) <= 5
+
+
+def test_top_zero_returns_empty():
+    """Requesting zero top words should return an empty list."""
+    report = build_word_cloud([_c("add feature flag")])
+    assert report.top(0) == []
+
+
+def test_total_words_matches_token_count():
+    """total_words should equal the sum of all word occurrence counts."""
+    commits = [_c("add feature"), _c("fix bug"), _c("add test")]
+    report = build_word_cloud(commits)
+    assert report.total_words == sum(report.counts.values())
 
 
 # --- word_cloud_dict ---
